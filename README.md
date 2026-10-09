@@ -4,7 +4,7 @@ Halcyon is the booking desk for a dental clinic. A patient picks the work, the d
 
 Maeen Alganimi built it as a portfolio piece for the freelance work he does with dental clinics. The sample practice is Whitmore Dental at 418 Whitmore Avenue, Portland.
 
-**Live demo:** https://YOUR-DEPLOYMENT.vercel.app
+Live demo: coming soon (not deployed yet)
 
 Demo mode needs no API keys. Clone the repo, install, and run. A Vercel project with an empty environment shows the same clinic.
 
