@@ -1,0 +1,156 @@
+{
+  "name": "Halcyon appointment reminders",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "nodes": [
+    {
+      "id": "c1a0b6d2-6e4a-4c1e-9a11-0b1e6d4a1001",
+      "name": "Every hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c1a0b6d2-6e4a-4c1e-9a11-0b1e6d4a1002",
+      "name": "Fetch due reminders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.HALCYON_APP_URL }}/api/reminders/due",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HALCYON_CRON_SECRET }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1a0b6d2-6e4a-4c1e-9a11-0b1e6d4a1003",
+      "name": "Split reminders",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [760, 300],
+      "parameters": {
+        "fieldToSplitOut": "reminders",
+        "options": {}
+      }
+    },
+    {
+      "id": "c1a0b6d2-6e4a-4c1e-9a11-0b1e6d4a1004",
+      "name": "Send reminder email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1020, 300],
+      "parameters": {
+        "fromEmail": "={{ $env.REMINDER_FROM }}",
+        "toEmail": "={{ $json.patientEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "c1a0b6d2-6e4a-4c1e-9a11-0b1e6d4a1005",
+      "name": "Mark reminder sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1280, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.HALCYON_APP_URL }}/api/reminders/mark-sent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HALCYON_CRON_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ids: [$json.id], channel: 'n8n' }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "c1a0b6d2-6e4a-4c1e-9a11-0b1e6d4a1006",
+      "name": "Setup note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 80],
+      "parameters": {
+        "width": 640,
+        "height": 180,
+        "content": "## Halcyon reminders\n\nSet these n8n environment variables before activating:\n\n- `HALCYON_APP_URL` — the deployed app, no trailing slash\n- `HALCYON_CRON_SECRET` — same value as the app `CRON_SECRET`\n- `REMINDER_FROM` — the mailbox patients should see\n\nAttach SMTP credentials to **Send reminder email**. The app also runs `GET /api/cron/reminders` on its own if n8n is not connected.\n\nImport this file, then activate the workflow."
+      }
+    }
+  ],
+  "connections": {
+    "Every hour": {
+      "main": [
+        [
+          {
+            "node": "Fetch due reminders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch due reminders": {
+      "main": [
+        [
+          {
+            "node": "Split reminders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split reminders": {
+      "main": [
+        [
+          {
+            "node": "Send reminder email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send reminder email": {
+      "main": [
+        [
+          {
+            "node": "Mark reminder sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
