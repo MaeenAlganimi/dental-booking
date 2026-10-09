@@ -1,0 +1,33 @@
+import { expect, test } from "@playwright/test"
+
+test("a patient can book a chair and cancel it from the manage link", async ({ page }) => {
+  await page.goto("/")
+  await expect(page.getByRole("heading", { name: /reserved without the phone tag/i })).toBeVisible()
+  await page.getByRole("link", { name: "Book a visit" }).first().click()
+  await page.getByRole("button", { name: /Routine cleaning/ }).click()
+  await page.getByRole("button", { name: /Priya Raman/ }).click()
+  await page.getByTestId("slot").first().click()
+  await page.getByLabel("Name").fill("Ada Lovelace")
+  await page.getByLabel("Email").fill("ada@example.com")
+  await page.getByLabel("Phone").fill("503-555-0142")
+  await page.getByRole("button", { name: "Confirm visit" }).click()
+  const manage = page.getByTestId("manage-link")
+  await expect(manage).toBeVisible()
+  await manage.click()
+  await expect(page.getByRole("heading", { name: "Routine cleaning" })).toBeVisible()
+  await page.getByRole("button", { name: "Cancel visit" }).click()
+  await page.getByRole("button", { name: "Yes, cancel it" }).click()
+  await expect(page.getByText("cancelled", { exact: true })).toBeVisible()
+})
+
+test("staff can see the daybook and record a reminder", async ({ page }) => {
+  await page.goto("/login")
+  await page.getByLabel("Email").fill("staff@whitmore.dental")
+  await page.getByLabel("Password").fill("whitmore-demo")
+  await page.getByRole("button", { name: "Sign in" }).click()
+  await expect(page.getByRole("heading", { name: "The week" })).toBeVisible()
+  await expect(page.getByText("Maya Chen")).toBeVisible()
+  await page.getByRole("link", { name: "Reminders" }).click()
+  await page.getByRole("button", { name: "Send due reminders" }).click()
+  await expect(page.getByTestId("reminder-log").first()).toContainText("Maya Chen")
+})
