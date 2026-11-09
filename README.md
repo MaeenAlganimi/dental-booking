@@ -69,6 +69,10 @@ flowchart TB
   n8n[n8n workflow] -->|due, then email, then mark sent| api
 ```
 
+## AI-assisted development
+
+This project was built with AI-assisted development: code, tests, and documentation were drafted with an AI assistant, then checked by running lint, typecheck, tests, and build. Nothing in this project should be read as production-audited.
+
 Demo requests carry the book in the body and get the next snapshot back. The browser stores it in `localStorage`. Production ignores that header and reads Postgres with the service role. Staff sign-in in production is Supabase Auth, and only a row in `staff_profiles` opens the desk.
 
 ## Decisions
